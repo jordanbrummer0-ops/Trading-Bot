@@ -300,5 +300,43 @@ def main():
     print("   - Consider implementing position sizing based on volatility")
     print("   - Test risk management on different market conditions")
 
+class RiskManager:
+    """
+    Risk management class for applying stop-loss, take-profit, and position sizing.
+    """
+    
+    def __init__(self, stop_loss_pct: float = 0.02, take_profit_pct: float = 0.04):
+        self.stop_loss_pct = stop_loss_pct
+        self.take_profit_pct = take_profit_pct
+    
+    def apply_stop_loss_take_profit(self, data: pd.DataFrame, signals: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply stop-loss and take-profit rules to trading signals.
+        
+        Args:
+            data: Price data DataFrame
+            signals: Trading signals DataFrame
+            
+        Returns:
+            Modified signals DataFrame with risk management applied
+        """
+        # For now, return signals unchanged - can be enhanced later
+        return signals.copy()
+    
+    def apply_position_sizing(self, data: pd.DataFrame, signals: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply position sizing rules to trading signals.
+        
+        Args:
+            data: Price data DataFrame
+            signals: Trading signals DataFrame
+            
+        Returns:
+            Modified signals DataFrame with position sizing applied
+        """
+        # For now, return signals unchanged - can be enhanced later
+        return signals.copy()
+
+
 if __name__ == "__main__":
     main()

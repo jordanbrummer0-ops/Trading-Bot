@@ -73,11 +73,25 @@ initial_capital = 10000
 
 ### Troubleshooting
 
+#### Installer Errors (Non-zero Exit Code):
+1. **Try minimal requirements**: Use `requirements-minimal.txt` instead
+2. **Version conflicts**: Remove version pins from requirements
+3. **Problematic packages**: Remove scipy, aiohttp, seaborn temporarily
+4. **Alternative approach**: Deploy with basic functionality first
+
 #### Common Issues:
 1. **Import Errors**: Ensure all dependencies are in requirements-streamlit.txt
 2. **File Path Issues**: Use relative paths, avoid absolute Windows paths
 3. **Memory Limits**: Reduce data loading, use caching
 4. **Timeout Issues**: Optimize data fetching and processing
+5. **Dependency Conflicts**: Use flexible version ranges (>=) instead of exact versions (==)
+
+#### Solutions:
+- Check logs in Streamlit Cloud dashboard
+- Use `st.error()` for debugging
+- Implement graceful error handling
+- Consider caching with `@st.cache_data`
+- Start with minimal requirements and add packages incrementally
 
 #### Performance Optimization:
 - Use `@st.cache_data` for expensive operations

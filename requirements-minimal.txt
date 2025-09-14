@@ -1,0 +1,15 @@
+# Minimal Requirements for Streamlit Cloud
+# Only essential packages to avoid installer conflicts
+
+# Core packages
+streamlit
+pandas
+numpy
+plotly
+
+# Financial data
+yfinance
+
+# Basic utilities
+requests
+python-dotenv

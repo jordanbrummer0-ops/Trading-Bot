@@ -37,7 +37,7 @@ from src.trading_strategy import BaseStrategy, MovingAverageStrategy, RSIStrateg
 from src.enhanced_strategy import RiskManagedStrategy, EnhancedMovingAverageStrategy, BollingerBandsMeanReversionStrategy
 from src.backtesting_engine import BacktestingEngine
 from src.visualization import TradingVisualizer
-from config import Config
+from config import TradingBotConfig as Config
 
 # Import our analysis modules
 from risk_management_analysis import RiskManager

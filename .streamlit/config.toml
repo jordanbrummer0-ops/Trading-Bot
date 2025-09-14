@@ -1,6 +1,3 @@
-[global]
-dataFrameSerialization = "legacy"
-
 [server]
 port = 8501
 headless = true

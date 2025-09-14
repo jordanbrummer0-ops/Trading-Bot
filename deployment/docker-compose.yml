@@ -1,0 +1,184 @@
+version: '3.8'
+
+services:
+  # Main Trading Bot Service
+  trading-bot:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: trading-bot-main
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://tradingbot:${DB_PASSWORD}@postgres:5432/tradingbot
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+      - ../analysis_charts:/app/analysis_charts
+      - ../config:/app/config
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - trading-network
+    command: python main.py
+
+  # Streamlit Dashboard
+  dashboard:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: trading-bot-dashboard
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONPATH=/app
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+      - ../analysis_charts:/app/analysis_charts
+    depends_on:
+      - redis
+      - trading-bot
+    networks:
+      - trading-network
+    command: streamlit run monitoring_dashboard.py --server.port=8501 --server.address=0.0.0.0
+
+  # Redis for caching and message queuing
+  redis:
+    image: redis:7-alpine
+    container_name: trading-bot-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - trading-network
+    command: redis-server --appendonly yes
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: trading-bot-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=tradingbot
+      - POSTGRES_USER=tradingbot
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - trading-network
+
+  # Celery Worker for Background Tasks
+  celery-worker:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: trading-bot-worker
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - DATABASE_URL=postgresql://tradingbot:${DB_PASSWORD}@postgres:5432/tradingbot
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - trading-network
+    command: celery -A tasks worker --loglevel=info
+
+  # Celery Beat for Scheduled Tasks
+  celery-beat:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: trading-bot-scheduler
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ../logs:/app/logs
+    depends_on:
+      - redis
+    networks:
+      - trading-network
+    command: celery -A tasks beat --loglevel=info
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: trading-bot-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - dashboard
+    networks:
+      - trading-network
+
+  # Prometheus for Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: trading-bot-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - trading-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  # Grafana for Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: trading-bot-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - trading-network
+
+volumes:
+  redis_data:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  trading-network:
+    driver: bridge

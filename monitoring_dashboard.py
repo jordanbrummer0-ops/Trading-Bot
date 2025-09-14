@@ -542,7 +542,7 @@ class TradingDashboard:
         
         # Manual refresh button
         if st.sidebar.button("[REFRESH] Refresh Data"):
-            st.experimental_rerun()
+            st.rerun()
         
         st.sidebar.markdown("---")
         st.sidebar.markdown("**Last Updated:** " + datetime.now().strftime("%H:%M:%S"))

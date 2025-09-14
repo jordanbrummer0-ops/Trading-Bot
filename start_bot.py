@@ -85,11 +85,11 @@ class TradingBotOrchestrator:
     
     def validate_environment(self) -> bool:
         """Validate environment and prerequisites"""
-        self.logger.info("🔍 Validating environment...")
+        self.logger.info("[VALIDATE] Validating environment...")
         
         # Check Python version
         if sys.version_info < (3, 8):
-            self.logger.error("❌ Python 3.8+ required")
+            self.logger.error("[ERROR] Python 3.8+ required")
             return False
         
         # Check required files
@@ -102,7 +102,7 @@ class TradingBotOrchestrator:
         
         for file_path in required_files:
             if not (self.project_root / file_path).exists():
-                self.logger.error(f"❌ Missing required file: {file_path}")
+                self.logger.error(f"[ERROR] Missing required file: {file_path}")
                 return False
         
         # Check environment variables for production mode
@@ -114,7 +114,7 @@ class TradingBotOrchestrator:
             
             missing_vars = [var for var in required_env_vars if not os.getenv(var)]
             if missing_vars:
-                self.logger.error(f"❌ Missing environment variables: {', '.join(missing_vars)}")
+                self.logger.error(f"[ERROR] Missing environment variables: {', '.join(missing_vars)}")
                 return False
         
         # Check dependencies
@@ -124,12 +124,12 @@ class TradingBotOrchestrator:
             import yfinance
             import streamlit
             import plotly
-            self.logger.info("✅ Core dependencies available")
+            self.logger.info("[SUCCESS] Core dependencies available")
         except ImportError as e:
-            self.logger.error(f"❌ Missing dependency: {e}")
+            self.logger.error(f"[ERROR] Missing dependency: {e}")
             return False
         
-        self.logger.info("✅ Environment validation passed")
+        self.logger.info("[SUCCESS] Environment validation passed")
         return True
     
     def load_configuration(self) -> Dict:
@@ -162,7 +162,7 @@ class TradingBotOrchestrator:
     
     def start_main_engine(self):
         """Start the main trading engine"""
-        self.logger.info("🚀 Starting main trading engine...")
+        self.logger.info("[START] Starting main trading engine...")
         
         cmd = [sys.executable, 'main.py']
         
@@ -183,7 +183,7 @@ class TradingBotOrchestrator:
             )
             
             self.processes['main_engine'] = process
-            self.logger.info("✅ Main trading engine started")
+            self.logger.info("[SUCCESS] Main trading engine started")
             
             # Start output monitoring thread
             threading.Thread(
@@ -193,11 +193,11 @@ class TradingBotOrchestrator:
             ).start()
             
         except Exception as e:
-            self.logger.error(f"❌ Failed to start main engine: {e}")
+            self.logger.error(f"[ERROR] Failed to start main engine: {e}")
     
     def start_dashboard(self):
         """Start the Streamlit dashboard"""
-        self.logger.info("📊 Starting dashboard...")
+        self.logger.info("[DASHBOARD] Starting dashboard...")
         
         port = self.config['monitoring']['dashboard_port']
         
@@ -219,7 +219,7 @@ class TradingBotOrchestrator:
             )
             
             self.processes['dashboard'] = process
-            self.logger.info(f"✅ Dashboard started on port {port}")
+            self.logger.info(f"[SUCCESS] Dashboard started on port {port}")
             
             # Start output monitoring thread
             threading.Thread(
@@ -229,11 +229,11 @@ class TradingBotOrchestrator:
             ).start()
             
         except Exception as e:
-            self.logger.error(f"❌ Failed to start dashboard: {e}")
+            self.logger.error(f"[ERROR] Failed to start dashboard: {e}")
     
     def start_parameter_optimization(self, symbol: str = None):
         """Start parameter optimization process"""
-        self.logger.info("🔧 Starting parameter optimization...")
+        self.logger.info("[OPTIMIZE] Starting parameter optimization...")
         
         cmd = [sys.executable, 'parameter_optimization.py']
         
@@ -250,7 +250,7 @@ class TradingBotOrchestrator:
             )
             
             self.processes['optimization'] = process
-            self.logger.info("✅ Parameter optimization started")
+            self.logger.info("[SUCCESS] Parameter optimization started")
             
             # Start output monitoring thread
             threading.Thread(
@@ -260,11 +260,11 @@ class TradingBotOrchestrator:
             ).start()
             
         except Exception as e:
-            self.logger.error(f"❌ Failed to start optimization: {e}")
+            self.logger.error(f"[ERROR] Failed to start optimization: {e}")
     
     def run_backtest(self, symbol: str, strategy: str = None):
         """Run backtesting for specific symbol and strategy"""
-        self.logger.info(f"📈 Running backtest for {symbol}...")
+        self.logger.info(f"[BACKTEST] Running backtest for {symbol}...")
         
         cmd = [sys.executable, 'main.py', '--backtest', '--symbol', symbol]
         
@@ -281,16 +281,16 @@ class TradingBotOrchestrator:
             )
             
             if process.returncode == 0:
-                self.logger.info(f"✅ Backtest completed for {symbol}")
+                self.logger.info(f"[SUCCESS] Backtest completed for {symbol}")
                 print(process.stdout)
             else:
-                self.logger.error(f"❌ Backtest failed for {symbol}")
+                self.logger.error(f"[ERROR] Backtest failed for {symbol}")
                 print(process.stderr)
                 
         except subprocess.TimeoutExpired:
-            self.logger.error(f"❌ Backtest timeout for {symbol}")
+            self.logger.error(f"[ERROR] Backtest timeout for {symbol}")
         except Exception as e:
-            self.logger.error(f"❌ Backtest error: {e}")
+            self.logger.error(f"[ERROR] Backtest error: {e}")
     
     def monitor_process_output(self, name: str, process: subprocess.Popen):
         """Monitor process output and log it"""
@@ -310,18 +310,18 @@ class TradingBotOrchestrator:
     
     def monitor_system_health(self):
         """Monitor system health and performance"""
-        self.logger.info("🏥 Starting system health monitoring...")
+        self.logger.info("[HEALTH] Starting system health monitoring...")
         
         while self.running:
             try:
                 # Check process health
                 for name, process in self.processes.items():
                     if process.poll() is not None:
-                        self.logger.warning(f"⚠️ Process {name} has stopped")
+                        self.logger.warning(f"[WARNING] Process {name} has stopped")
                         
                         # Restart critical processes
                         if name in ['main_engine', 'dashboard'] and self.running:
-                            self.logger.info(f"🔄 Restarting {name}...")
+                            self.logger.info(f"[RESTART] Restarting {name}...")
                             if name == 'main_engine':
                                 self.start_main_engine()
                             elif name == 'dashboard':
@@ -334,10 +334,10 @@ class TradingBotOrchestrator:
                     memory_percent = psutil.virtual_memory().percent
                     
                     if cpu_percent > 80:
-                        self.logger.warning(f"⚠️ High CPU usage: {cpu_percent}%")
+                        self.logger.warning(f"[WARNING] High CPU usage: {cpu_percent}%")
                     
                     if memory_percent > 80:
-                        self.logger.warning(f"⚠️ High memory usage: {memory_percent}%")
+                        self.logger.warning(f"[WARNING] High memory usage: {memory_percent}%")
                         
                 except ImportError:
                     pass  # psutil not available
@@ -367,16 +367,16 @@ class TradingBotOrchestrator:
                 # Wait for graceful shutdown
                 try:
                     process.wait(timeout=10)
-                    self.logger.info(f"✅ {name} stopped gracefully")
+                    self.logger.info(f"[SUCCESS] {name} stopped gracefully")
                 except subprocess.TimeoutExpired:
-                    self.logger.warning(f"⚠️ Force killing {name}")
+                    self.logger.warning(f"[WARNING] Force killing {name}")
                     process.kill()
         
-        self.logger.info("✅ All processes stopped")
+        self.logger.info("[SUCCESS] All processes stopped")
     
     def run(self):
         """Main run method"""
-        self.logger.info(f"🚀 Starting Trading Bot in {self.mode} mode...")
+        self.logger.info(f"[START] Starting Trading Bot in {self.mode} mode...")
         
         # Validate environment
         if not self.validate_environment():
@@ -436,17 +436,17 @@ class TradingBotOrchestrator:
     def print_startup_summary(self):
         """Print startup summary"""
         print("\n" + "="*60)
-        print("🤖 TRADING BOT SYSTEM STARTED")
+        print("[BOT] TRADING BOT SYSTEM STARTED")
         print("="*60)
         print(f"Mode: {self.mode.upper()}")
         print(f"Paper Trading: {'Yes' if self.config['trading']['paper_trading'] else 'No'}")
         
         if 'dashboard' in self.processes:
             port = self.config['monitoring']['dashboard_port']
-            print(f"📊 Dashboard: http://localhost:{port}")
+            print(f"[DASHBOARD] Dashboard: http://localhost:{port}")
         
-        print(f"📁 Logs: {self.project_root / 'logs'}")
-        print(f"📈 Charts: {self.project_root / 'analysis_charts'}")
+        print(f"[LOGS] Logs: {self.project_root / 'logs'}")
+        print(f"[CHARTS] Charts: {self.project_root / 'analysis_charts'}")
         print("\nPress Ctrl+C to stop the system")
         print("="*60 + "\n")
 

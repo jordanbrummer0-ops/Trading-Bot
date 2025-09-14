@@ -134,6 +134,10 @@ analysis_charts/*.csv
 *.pem
 config_local.py
 
+# Streamlit
+.streamlit/secrets.toml
+.streamlit/credentials.toml
+
 # Temporary files
 *.tmp
 *.temp

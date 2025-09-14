@@ -33,16 +33,24 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import yfinance as yf
 
-# Import our modules
+# Import our modules with error handling for cloud deployment
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from src.data_fetcher import DataFetcher
-from main import TradingBotEngine
-from broker_integration import BrokerManager
+try:
+    from src.data_fetcher import DataFetcher
+    from main import TradingBotEngine
+    from broker_integration import BrokerManager
+    CLOUD_MODE = False
+except ImportError as e:
+    st.warning(f"Running in cloud mode - some features may be limited: {e}")
+    DataFetcher = None
+    TradingBotEngine = None
+    BrokerManager = None
+    CLOUD_MODE = True
 
 # Configure Streamlit page
 st.set_page_config(
     page_title="Trading Bot Dashboard",
-    page_icon="📈",
+    page_icon="[Chart]",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -60,9 +68,11 @@ class TradingDashboard:
     """
     
     def __init__(self):
-        self.data_fetcher = DataFetcher()
+        # Initialize components based on availability
+        self.data_fetcher = DataFetcher() if DataFetcher else None
         self.bot_engine = None
         self.broker_manager = None
+        self.cloud_mode = CLOUD_MODE
         
         # Initialize session state
         if 'portfolio_data' not in st.session_state:
@@ -110,7 +120,7 @@ class TradingDashboard:
     
     def create_portfolio_overview(self):
         """Create portfolio overview section"""
-        st.header("📊 Portfolio Overview")
+        st.header("[PORTFOLIO] Portfolio Overview")
         
         # Create metrics columns
         col1, col2, col3, col4 = st.columns(4)
@@ -185,7 +195,7 @@ class TradingDashboard:
     
     def create_performance_charts(self):
         """Create performance monitoring charts"""
-        st.header("📈 Performance Analysis")
+        st.header("[PERFORMANCE] Performance Analysis")
         
         # Generate sample performance data
         dates = pd.date_range(start='2024-01-01', end=datetime.now(), freq='D')
@@ -268,7 +278,7 @@ class TradingDashboard:
     
     def create_risk_monitoring(self):
         """Create risk monitoring section"""
-        st.header("⚠️ Risk Monitoring")
+        st.header("[RISK] Risk Monitoring")
         
         # Risk metrics
         col1, col2, col3 = st.columns(3)
@@ -305,11 +315,11 @@ class TradingDashboard:
         
         for alert in alerts:
             if alert["type"] == "warning":
-                st.warning(f"⚠️ {alert['message']} ({alert['time']})")
+                st.warning(f"[WARNING] {alert['message']} ({alert['time']})")
             elif alert["type"] == "info":
-                st.info(f"ℹ️ {alert['message']} ({alert['time']})")
+                st.info(f"[INFO] {alert['message']} ({alert['time']})")
             elif alert["type"] == "success":
-                st.success(f"✅ {alert['message']} ({alert['time']})")
+                st.success(f"[SUCCESS] {alert['message']} ({alert['time']})")
         
         # Drawdown chart
         st.subheader("Drawdown Analysis")
@@ -442,7 +452,7 @@ class TradingDashboard:
     
     def create_settings_panel(self):
         """Create settings and configuration panel"""
-        st.header("⚙️ Bot Configuration")
+        st.header("[CONFIG] Bot Configuration")
         
         # Bot status
         col1, col2 = st.columns(2)
@@ -507,7 +517,7 @@ class TradingDashboard:
     def run_dashboard(self):
         """Main dashboard runner"""
         # Sidebar navigation
-        st.sidebar.title("📈 Trading Bot Dashboard")
+        st.sidebar.title("[DASHBOARD] Trading Bot Dashboard")
         st.sidebar.markdown("---")
         
         # Navigation menu
@@ -531,7 +541,7 @@ class TradingDashboard:
             # Note: In production, implement actual auto-refresh
         
         # Manual refresh button
-        if st.sidebar.button("🔄 Refresh Data"):
+        if st.sidebar.button("[REFRESH] Refresh Data"):
             st.experimental_rerun()
         
         st.sidebar.markdown("---")
@@ -554,7 +564,7 @@ class TradingDashboard:
 def main():
     """Main function to run the Streamlit dashboard"""
     # Dashboard title
-    st.title("🤖 Trading Bot Monitoring Dashboard")
+    st.title("[BOT] Trading Bot Monitoring Dashboard")
     st.markdown("Real-time monitoring and control of your automated trading system")
     st.markdown("---")
     
@@ -567,7 +577,7 @@ def main():
     st.markdown(
         "<div style='text-align: center; color: gray;'>"
         "Trading Bot Dashboard v1.0 | "
-        "⚠️ For educational purposes only - Not financial advice"
+        "[WARNING] For educational purposes only - Not financial advice"
         "</div>", 
         unsafe_allow_html=True
     )

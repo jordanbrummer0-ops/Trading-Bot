@@ -36,7 +36,7 @@ from src.data_fetcher import DataFetcher
 from src.trading_strategy import BaseStrategy, MovingAverageStrategy, RSIStrategy, MACDStrategy, CombinedStrategy
 from src.enhanced_strategy import RiskManagedStrategy, EnhancedMovingAverageStrategy, BollingerBandsMeanReversionStrategy
 from src.backtesting_engine import BacktestingEngine
-from src.visualization import Visualizer
+from src.visualization import TradingVisualizer
 from config import Config
 
 # Import our analysis modules
@@ -95,7 +95,7 @@ class TradingBotEngine:
         # Initialize components
         self.data_fetcher = DataFetcher()
         self.backtesting_engine = BacktestingEngine()
-        self.visualizer = Visualizer()
+        self.visualizer = TradingVisualizer()
         self.risk_manager = RiskManager()
         self.confirmation_indicators = ConfirmationIndicators()
         self.parameter_optimizer = ParameterOptimizer()
